@@ -110,7 +110,7 @@ for seq_record in SeqIO.parse(args.input, "fasta"):
 		print(seq_record.id)
 		pos1 = int(dict_headers2[seq_record.id+"hit1"])
 		pos2 = int(dict_headers2[seq_record.id+"hit2"])
-		fasta_out.write(seq_record.id+"\n")
+		fasta_out.write(">"+seq_record.id+"\n")
 		fasta_out.write(str(seq_record.seq[pos1:pos2])+"\n")
 fasta_out.close()		
 '''fasta = open(args.input, "fasta")
