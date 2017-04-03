@@ -4,6 +4,7 @@ import os, argparse, math, pandas
 import matplotlib.pyplot as plt
 from xml.dom import minidom
 from collections import OrderedDict
+from Bio import SeqIO
 
 ################################
 #   User Defined Parameters    #
@@ -64,6 +65,7 @@ dict3 = OrderedDict((k, dict1[k] + dict2[k]) for k in dict1 if k in dict2)
 print("Generating output files...")
 with open(args.output+'/VirtualPrimer.out', 'w') as tsv_out:
 	dict_headers = {}
+	dict_headers2 = {}
 	for key, value in dict3.items():		
 		string_value = (str(value))
 		for c in "',)(":
@@ -93,13 +95,25 @@ with open(args.output+'/VirtualPrimer.out', 'w') as tsv_out:
 				hit2 = hit2_to
 			hitlength = math.fabs(int(hit1)-int(hit2))
 		tsv_out.write(str(key)+'\t'+string_value.replace(' ', '\t')+'\t'+str(hitlength)+'\n')
-		dict_headers[key] = hitlength
+		dict_headers[str(key).split(" ")[0]] = hitlength
+		dict_headers2[str(key).split(" ")[0]+"hit1"] = hit1
+		dict_headers2[str(key).split(" ")[0]+"hit2"] = hit2
 	length_average = sum(dict_headers.values())/len(dict_headers)
 
 ################################
 #  Generate Fasta Output File  #
 ################################
-fasta = open(args.input)
+fasta_out = open(args.output+"/fasta_filtered.fa", 'w')
+for seq_record in SeqIO.parse(args.input, "fasta"):
+	print(seq_record.id)
+	if seq_record.id in dict_headers and dict_headers[seq_record.id] <= length_average*length_greater and dict_headers[seq_record.id] >= length_average*length_smaller:
+		print(seq_record.id)
+		pos1 = int(dict_headers2[seq_record.id+"hit1"])
+		pos2 = int(dict_headers2[seq_record.id+"hit2"])
+		fasta_out.write(seq_record.id+"\n")
+		fasta_out.write(str(seq_record.seq[pos1:pos2])+"\n")
+fasta_out.close()		
+'''fasta = open(args.input, "fasta")
 fasta_variable = fasta.readlines()
 fasta_out = open(args.output+"/fasta_filtered.fa", 'w')
 switch = False
@@ -114,7 +128,7 @@ for line in fasta_variable:
 		if switch == True:
 			fasta_out.write(line)
 fasta.close()
-fasta_out.close()
+fasta_out.close()'''
 
 ################################
 #       Generate Graphs        #
